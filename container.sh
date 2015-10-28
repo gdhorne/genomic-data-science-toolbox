@@ -82,7 +82,7 @@ function manage_container() {
 			if [[ -z `docker ps --all=true | grep ^${2}` ]]
 			then
 				if [ -z `docker images | \
-					grep ^genomic-data-science-toolbox |\
+					grep ^${3%:*} | \
 				       	cut -d\  -f1` ]
 				then
 					echo -n "Building/fetching container "
