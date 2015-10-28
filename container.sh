@@ -85,9 +85,14 @@ function manage_container() {
 					grep ^${3%:*} | \
 				       	cut -d\  -f1` ]
 				then
-					echo -n "Building/fetching container "
-					echo "image [${3}]."
-					docker build -t ${3} .
+					if [[ ! -z `echo ${3} | grep .+\/`  ]]
+					then
+						docker pull ${3}
+					else
+						echo -n "Building/fetching container "
+						echo "image [${3}]."
+						docker build -t ${3} .
+					fi
 				fi
 				echo "Creating container [${2}]."
 				if [[ -z ${4} ]]
