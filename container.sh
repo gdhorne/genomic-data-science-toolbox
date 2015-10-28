@@ -81,6 +81,7 @@ function manage_container() {
 		create)
 			if [[ -z `docker ps --all=true | grep ^${2}` ]]
 			then
+				echo "Building/fetching container image [${3}]."
 				if [ -z `docker images | \
 					grep ^${3%:*} | \
 				       	cut -d\  -f1` ]
@@ -89,8 +90,6 @@ function manage_container() {
 					then
 						docker pull ${3}
 					else
-						echo -n "Building/fetching container "
-						echo "image [${3}]."
 						docker build -t ${3} .
 					fi
 				fi
