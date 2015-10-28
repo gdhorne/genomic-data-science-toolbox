@@ -11,51 +11,60 @@
 ###############################################################################
 
 
-FROM ubuntu:latest
+FROM	ubuntu:latest
 
-MAINTAINER "Gregory D. Horne" horne@member.fsf.org
+MAINTAINER	"Gregory D. Horne" horne@member.fsf.org
 
 ENV     ARCH amd64
-ENV     PYTHON_VERSION 3.4.3
 ENV     BIOPYTHON_VERSION 1.66
-ENV     R_VERSION 3.2.2
 ENV     RSTUDIO_VERSION 0.99.484
 
 ENV     DEBIAN_FRONTEND noninteractive
 
-RUN	apt-get update
+RUN		apt-get update
 
 
 # Configure the regional language settings
 
 ENV     LOCALE en_US.UTF-8
 
-RUN	dpkg-reconfigure locales \
-	&& locale-gen ${LOCALE} \
-	&& /usr/sbin/update-locale LANG=${LOCALE}
+RUN		dpkg-reconfigure locales \
+		&& locale-gen ${LOCALE} \
+		&& /usr/sbin/update-locale LANG=${LOCALE}
+
+
+# Create default user account 
+
+ENV     GDST_USER gdst
+ENV     HOME /home/${GDST_USER}
+
+RUN		useradd --create-home --shell /bin/bash ${GDST_USER} \
+		&& echo "${GDST_USER}:science" | chpasswd \
+		&& mkdir ${HOME}/bin
+
 
 # miscellaneous packages
 #
 RUN     apt-get install --yes --no-install-recommends \
         libssl-dev \
         libcurl4-gnutls-dev \
-	curl \
+		curl \
         wget \
         ca-certificates
 
 # Git command line client
 
-RUN	apt-get install --yes git git-doc \
-	&& git config --system push.default simple
+RUN		apt-get install --yes git git-doc \
+		&& git config --system push.default simple
 
 # Python
 
-RUN	apt-get install --yes --no-install-recommends \
-	build-essential \
-	python3 python3-dev \
-	gfortran \
-	python3-numpy \
-	python3-pip
+RUN		apt-get install --yes --no-install-recommends \
+		build-essential \
+		python3 python3-dev \
+		gfortran \
+		python3-numpy \
+		python3-pip
 
 # Jupyter (formerly IPython Notebook)
 
@@ -64,9 +73,9 @@ RUN     pip3 install jupyter
 # BioPython
 
 RUN     cd /tmp \
-	&& wget -c -nv http://biopython.org/DIST/biopython-${BIOPYTHON_VERSION}.tar.gz \
+		&& wget -c -nv http://biopython.org/DIST/biopython-${BIOPYTHON_VERSION}.tar.gz \
         && tar -xzf biopython-${BIOPYTHON_VERSION}.tar.gz \
-	&& cd biopython* \
+		&& cd biopython* \
         && python3 setup.py build \
         && python3 setup.py install \
         && cd / \
@@ -75,7 +84,7 @@ RUN     cd /tmp \
 
 # Python
 
-RUN	apt-get install -y --no-install-recommends python
+RUN		apt-get install -y --no-install-recommends python
 
 # Galaxy
 
@@ -118,29 +127,20 @@ RUN     echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" \
 
 # RStudio Server
 
-RUN	apt-get install --yes psmisc libapparmor1 \
-	&& wget -c -nv http://download2.rstudio.org/rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb \
-	&& dpkg -i rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb \
-	&& rm rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb
+RUN		apt-get install --yes psmisc libapparmor1 \
+		&& wget -c -nv http://download2.rstudio.org/rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb \
+		&& dpkg -i rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb \
+		&& rm rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb
 
 RUN	echo "r-libs-user=~/R/packages" >> /etc/rstudio/rsession.conf
 
 
-# Create default user account 
-
-ENV	GDST_USER gdst	
-ENV	HOME /home/${GDST_USER}
-
-RUN	useradd --create-home --shell /bin/bash ${GDST_USER} \
-	&& echo "${GDST_USER}:science" | chpasswd \
-	&& mkdir ${HOME}/bin
-
-
 # Jupyter notebook
 
-RUN	cd ${HOME} \
-	&& jupyter notebook --generate-config \ 
-	&& sed -i "s/# c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '0.0.0.0'/"  ${HOME}/.jupyter/jupyter_notebook_config.py
+RUN		cd ${HOME} \
+		&& jupyter notebook --generate-config \ 
+		&& sed -i "s/# c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '0.0.0.0'/"\
+			  ${HOME}/.jupyter/jupyter_notebook_config.py
 
 
 # Bioconductor Package for R
@@ -152,49 +152,49 @@ RUN     Rscript /tmp/bioconductor_installation.r \
 
 # Console/terminal managememnt, text editor and text editor plug-in manager
 
-RUN	apt-get install --yes screen vim \
-	&& echo "alias vi=vim" >> ${HOME}/.bashrc \
-	&& curl -fLo ${HOME}/.vim/autoload/plug.vim --create-dirs \
+RUN		apt-get install --yes screen vim \
+		&& echo "alias vi=vim" >> ${HOME}/.bashrc \
+		&& curl -fLo ${HOME}/.vim/autoload/plug.vim --create-dirs \
                 https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim \
-	&& mkdir ${HOME}/data
+		&& mkdir ${HOME}/data
 
-ADD	vimrc ${HOME}/.vimrc
+ADD		vimrc ${HOME}/.vimrc
 
-#RUN chown -R ${GDST_USER}:${GDST_USER} ${HOME}
 
 # WeTTY
 
-RUN	apt-get install --yes nodejs-legacy npm \
-	&& cd /tmp \
-	&& git clone https://github.com/krishnasrinivas/wetty \
-	&& cd wetty \
-	&& npm install \
-	&& mkdir /opt/wetty \
-	&& cp app.js /opt/wetty/app.js \
-	&& cp bin/wetty.js /opt/wetty/wetty.js \
-	&& sed -i 's/\.\.\/app/\/opt\/wetty\/app\.js/' /opt/wetty/wetty.js \
-	&& chmod +x /opt/wetty/wetty.js \
-	&& cp -r node_modules /opt/wetty \
-	&& cp -r public /opt/wetty \
-	&& ln -s /opt/wetty/wetty.js /usr/local/bin/wetty.js \
-	&& rm -r /tmp/wetty
+RUN		apt-get install --yes nodejs-legacy npm \
+		&& cd /tmp \
+		&& git clone https://github.com/krishnasrinivas/wetty \
+		&& cd wetty \
+		&& npm install \
+		&& mkdir /opt/wetty \
+		&& cp app.js /opt/wetty/app.js \
+		&& cp bin/wetty.js /opt/wetty/wetty.js \
+		&& sed -i 's/\.\.\/app/\/opt\/wetty\/app\.js/' /opt/wetty/wetty.js \
+		&& chmod +x /opt/wetty/wetty.js \
+		&& cp -r node_modules /opt/wetty \
+		&& cp -r public /opt/wetty \
+		&& ln -s /opt/wetty/wetty.js /usr/local/bin/wetty.js \
+		&& rm -r /tmp/wetty
 
 
 # Supervisor deamon
 
-RUN     apt-get install --yes \
-	supervisor
+RUN     apt-get install --yes supervisor
 
 COPY    supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN     mkdir -p /var/log/supervisor \
-	&& chgrp staff /var/log/supervisor \
-	&& chmod g+w /var/log/supervisor \
-	&& chgrp staff /etc/supervisor/conf.d/supervisord.conf
+		&& chgrp staff /var/log/supervisor \
+		&& chmod g+w /var/log/supervisor \
+		&& chgrp staff /etc/supervisor/conf.d/supervisord.conf
 
 
-RUN mkdir ${HOME}/.python-eggs \
-	&& chown -R ${GDST_USER}:${GDST_USER} ${HOME}
+RUN		mkdir ${HOME}/.python-eggs
+
+RUN		chown -R ${GDST_USER}:${GDST_USER} ${HOME}
+
 
 # Clean-up installation environment
 
