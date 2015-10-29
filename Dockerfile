@@ -40,7 +40,8 @@ ENV     HOME /home/${GDST_USER}
 
 RUN		useradd --create-home --shell /bin/bash ${GDST_USER} \
 		&& echo "${GDST_USER}:science" | chpasswd \
-		&& mkdir ${HOME}/bin
+		&& mkdir ${HOME}/bin \
+		&& mkdir ${HOME}/tmp
 
 
 # miscellaneous packages
