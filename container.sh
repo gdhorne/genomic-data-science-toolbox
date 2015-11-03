@@ -230,7 +230,7 @@ function manage_container() {
 		status)
 			if [ -z ${2} ]
 			then
-				docker ps -all=true
+				docker ps -a
 			else
 				docker ps --filter=name=${2}
 			fi
