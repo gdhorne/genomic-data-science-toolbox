@@ -1,15 +1,18 @@
 ###############################################################################
-# Data Science Toolbox for Genomic Data Science Specialization               #
-#                                                                            #
-# Build a Docker image for the Genomic Data Science Specialization           #
-# Johns Hopkins University                                                   #
-#                                                                            #
-# Version 0.1, Copyright (C) 2015 Gregory D. Horne                           #
-#                                 (horne at member dot fsf dot org)          #
-#                                                                            #
-# Licensed under the terms of the GNU General Public license (GPL) v2        #
+# Data Science Toolbox for Genomic Data Science Specialization                #
+#                                                                             #
+# Build a Docker image for the Genomic Data Science Specialization            #
+# Johns Hopkins University                                                    #
+#                                                                             #
+# Version 0.1, Copyright (C) 2015 Gregory D. Horne                            #
+#                                 (horne at member dot fsf dot org)           #
+#                                                                             #
+# Licensed under the terms of the GNU General Public license (GPL) v2         #
 ###############################################################################
 
+
+# ./container.sh create genomics-data-toolbox genomics-data-science-toolbox \
+#		/home/me/datascience
 
 FROM	ubuntu:latest
 
@@ -17,7 +20,7 @@ MAINTAINER	"Gregory D. Horne" horne@member.fsf.org
 
 ENV     ARCH amd64
 ENV     BIOPYTHON_VERSION 1.66
-ENV     RSTUDIO_VERSION 0.99.484
+ENV     RSTUDIO_VERSION 0.99.878
 
 ENV     DEBIAN_FRONTEND noninteractive
 
@@ -45,20 +48,29 @@ RUN		useradd --create-home --shell /bin/bash ${GDST_USER} \
 
 
 # miscellaneous packages
-#
+
 RUN     apt-get install --yes --no-install-recommends \
         libssl-dev \
         libcurl4-gnutls-dev \
 		curl \
         wget \
-        ca-certificates
+        ca-certificates \
+		man
 
 # Git command line client
 
 RUN		apt-get install --yes git git-doc \
 		&& git config --system push.default simple
 
-# Python
+# Python 2.7 (required for Galaxy)
+
+RUN     apt-get install -y --no-install-recommends \
+		python \
+		python-dev \
+		python-pip
+
+
+# Python 3
 
 RUN		apt-get install --yes --no-install-recommends \
 		build-essential \
@@ -69,7 +81,10 @@ RUN		apt-get install --yes --no-install-recommends \
 
 # Jupyter (formerly IPython Notebook)
 
-RUN     pip3 install jupyter
+RUN     pip3 install jupyter \
+		&& python2 -m pip install ipykernel \
+		&& python2 -m ipykernel install --user
+
 
 # BioPython
 
@@ -82,10 +97,6 @@ RUN     cd /tmp \
         && cd / \
         && rm -rf /tmp/biopython-${BIOPYTHON_VERSION}.tar.gz /tmp/biopython*
 
-
-# Python
-
-RUN		apt-get install -y --no-install-recommends python
 
 # Galaxy
 
@@ -119,7 +130,7 @@ RUN     echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" \
         r-base r-base-dev r-doc-info r-recommended \
         libxml2-dev \
         pandoc pandoc-citeproc \
-        texlive texlive-xetex texlive-latex-extra \
+        texlive texlive-xetex texlive-latex-extra lmodern \
         && mkdir -p /etc/R/ \
         && echo "options(repos = list(CRAN = 'https://cran.rstudio.com/'), \
         download.file.method = 'libcurl')" \
@@ -153,7 +164,7 @@ RUN     Rscript /tmp/bioconductor_installation.r \
 
 # Console/terminal managememnt, text editor and text editor plug-in manager
 
-RUN		apt-get install --yes screen vim \
+RUN		apt-get install --yes screen vim nano \
 		&& echo "alias vi=vim" >> ${HOME}/.bashrc \
 		&& curl -fLo ${HOME}/.vim/autoload/plug.vim --create-dirs \
                 https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim \
