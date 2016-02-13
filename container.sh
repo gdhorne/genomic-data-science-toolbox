@@ -43,7 +43,7 @@ function display_banner() {
 }
 
 ###############################################################################
-# Process container lifecycle management requests.                             #
+# Process container lifecycle management requests.                            #
 ###############################################################################
 
 function manage_container() {
@@ -107,6 +107,8 @@ function manage_container() {
 							--publish=8888:8888 \
 							--name=${2} \
 							${3}
+							#--volume=/tmp/.X11-unix:/tmp/.X11-unix \
+							#--env=DISPLAY=unix$DISPLAY
 				else
 					docker run \
 							--detach=true \
@@ -120,6 +122,8 @@ function manage_container() {
 							--name=${2} \
 							--volume=${4}:/home/gdst/data \
 							${3}
+							#--volume=/tmp/.X11-unix:/tmp/.X11-unix \
+							#--env=DISPLAY=unix$DISPLAY
 				fi
 			else
 				echo -n "Error: Container with name [${2}] "
