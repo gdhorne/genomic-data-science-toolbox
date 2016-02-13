@@ -35,7 +35,7 @@ Download and install the Docker software for Apple Mac OS X, GNU/Linux or
 Microsoft Windows following the [instructions](http://docs.docker.com/linux/started/) at the [Docker](https://www.docker.com) website.
 
 Retrieve the genomic-data-science-toolbox repository and the
-genomic-data-science-toolbox image to create a container, and optionally   
+genomic-data-science-toolbox image to create a container, and optionally 
 map a host filesystem share for storage as shown.
 
 	$ git clone https://github.com/gdhorne/genomic-data-science-toolbox
@@ -68,6 +68,8 @@ browser.
 
 				UserID: gdst
 				Password: science
+
+	vim:		Accessible via WeTTY
 
 	WeTTY:		http://127.0.0.1:8000
 
