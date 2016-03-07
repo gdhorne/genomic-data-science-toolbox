@@ -11,8 +11,7 @@
 ###############################################################################
 
 
-# ./container.sh create genomics-data-toolbox genomics-data-science-toolbox \
-#		/home/me/datascience
+# ./container.sh create genomics-data-toolbox gdhorne/genomics-data-science-toolbox /home/me/datascience
 
 FROM	ubuntu:latest
 
@@ -20,7 +19,7 @@ MAINTAINER	"Gregory D. Horne" horne@member.fsf.org
 
 ENV     ARCH amd64
 ENV     BIOPYTHON_VERSION 1.66
-ENV     RSTUDIO_VERSION 0.99.878
+ENV     RSTUDIO_VERSION 0.99.892
 
 ENV     DEBIAN_FRONTEND noninteractive
 
@@ -56,6 +55,11 @@ RUN     apt-get install --yes --no-install-recommends \
         wget \
         ca-certificates \
 		man
+
+# X11
+
+ RUN     apt-get install --yes xvfb xauth xfonts-base
+
 
 # Git command line client
 
@@ -129,12 +133,14 @@ RUN     echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" \
         && apt-get install --yes --force-yes --no-install-recommends \
         r-base r-base-dev r-doc-info r-recommended \
         libxml2-dev \
-        pandoc pandoc-citeproc \
+		poppler-utils \
         texlive texlive-xetex texlive-latex-extra lmodern \
         && mkdir -p /etc/R/ \
-        && echo "options(repos = list(CRAN = 'https://cran.rstudio.com/'), \
-        download.file.method = 'libcurl')" \
-        > /etc/R/Rprofile.site
+		&& echo "options(repos = list(CRAN = 'https://cran.rstudio.com/'), \
+		download.file.method = 'libcurl')" /etc/R/Rprofile.site \
+		&& sed -i 's/^R_LIBS_USER/#R_LIBS_USER/' /etc/R/Renviron \
+		&& echo "R_LIBS_USER=~/R/packages" >> /etc/R/Renviron \
+		&& echo "R_LIBS=~/R/packages" >> /etc/R/Renviron.site
 
 
 # RStudio Server
@@ -144,7 +150,14 @@ RUN		apt-get install --yes psmisc libapparmor1 \
 		&& dpkg -i rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb \
 		&& rm rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb
 
-RUN	echo "r-libs-user=~/R/packages" >> /etc/rstudio/rsession.conf
+RUN		echo "r-libs-user=~/R/packages" >> /etc/rstudio/rsession.conf
+
+
+# Pandoc
+
+RUN     wget -c -nv https://github.com/jgm/pandoc/releases/download/1.16.0.2/pandoc-1.16.0.2-1-amd64.deb \
+		&& dpkg -i pandoc-1.16.0.2-1-amd64.deb \
+		&& rm pandoc-1.16.0.2-1-amd64.deb
 
 
 # Jupyter notebook
